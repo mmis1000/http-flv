@@ -1,9 +1,20 @@
 {
     "workbench.colorCustomizations": {
         "jsannotations.annotationForeground": "#555",
-        "activityBar.background": "#481951",
-        "titleBar.activeBackground": "#652372",
-        "titleBar.activeForeground": "#FEFCFE"
+        "activityBar.background": "#471951",
+        "activityBar.activeBorder": "#7a6b26",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#7a6b26",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "titleBar.activeBackground": "#250d2a",
+        "titleBar.inactiveBackground": "#250d2a99",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveForeground": "#e7e7e799",
+        "statusBar.background": "#250d2a",
+        "statusBarItem.hoverBackground": "#471951",
+        "statusBar.foreground": "#e7e7e7"
     },
-    "eslint.enable": true
+    "eslint.enable": true,
+    "peacock.remoteColor": "#250d2a"
 }

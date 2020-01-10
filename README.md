@@ -4,24 +4,24 @@
 
 This repo is a Docker image of [nginx-http-flv-module](https://github.com/winshining/nginx-http-flv-module), include a [flv.js](https://github.com/bilibili/flv.js) demo.
 
-[中文说明](https://github.com/mugennsou/http-flv/blob/master/README_CN.md)
+[中文说明](https://github.com/mmis1000/http-flv/blob/master/README_CN.md)
 
 ## Installation
 
 Pull Docker image:
 
 ```shell
-docker pull mugennsou/nginx-http-flv
+docker pull mmis1000/nginx-http-flv
 ```
 
-Note: you can pull the `mugennsou/nginx-http-flv:dev` tag to experience the latest (in developing) nginx-http-module.
+Note: you can pull the `mmis1000/nginx-http-flv:dev` tag to experience the latest (in developing) nginx-http-module.
 
 ## Usage
 
 Start nginx-http-flv server:
 
 ```shell
-docker run --rm -it -p 80:80 -p 1935:1935 mugennsou/nginx-http-flv
+docker run --rm -it -p 80:80 -p 1935:1935 mmis1000/nginx-http-flv
 ```
 
 Push RTMP stream to nginx-http-flv server:
@@ -42,7 +42,7 @@ You can read here for more details:
 
 [docker-nginx](https://github.com/nginxinc/docker-nginx)
 
-## test script (optimized for delay)
+## Test script (optimized for delay)
 
 ```shell
 ffmpeg \
@@ -56,3 +56,7 @@ ffmpeg \
   -vf drawtext=fontfile=roboto.ttf:text='%{localtime}':fontsize=40:fontcolor=white@0.8:x=250:y=200 \
   rtmp://127.0.0.1/demo/stream-1
 ```
+
+## See also
+
+original author: mugennsou/nginx-http-flv

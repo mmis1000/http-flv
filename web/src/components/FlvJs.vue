@@ -5,6 +5,7 @@
         <el-input v-model="mediaDataSource.url" />
       </el-form-item>
       <el-form-item>
+        <el-checkbox v-model="mediaDataSource.isLive" label="isLive" />
         <el-checkbox v-model="mediaDataSource.hasAudio" label="hasAudio" />
         <el-checkbox v-model="mediaDataSource.hasVideo" label="hasVideo" />
       </el-form-item>
@@ -14,8 +15,11 @@
         <el-button size="mini" @click="pause">PAUSE</el-button>
         <el-button size="mini" type="danger" @click="destroy">DESTROY</el-button>
       </el-form-item>
+      <el-form-item>
+        Current buffer length: {{poorestHealth.toFixed(3)}}s
+      </el-form-item>
     </el-form>
-    <video controls ref="video">
+    <video v-bind="mappedMediaDataSource.isLive ? {} : { controls: '' }" @timeupdate="onTimeUpdate" ref="video">
     </video>
   </div>
 </template>
@@ -50,19 +54,20 @@ export default {
       this.playbackRate = 1
 
       this.player && this.destroy()
-      this.player = Flv.createPlayer(this.mappedMediaDataSource)
+      this.player = Flv.createPlayer({ ...this.mappedMediaDataSource })
+
       this.player.attachMediaElement(this.$refs.video);
       this.player.load()
 
       this.bindEvents()
-      this.start()
+      // this.start()
     },
     bindEvents() {
       this.player.on('error', this.destroy)
-      this.player.on('loading_complete', this.destroy)
-      this.player.on('recovered_early_eof', this.destroy)
-      this.player.on('media_info', this.destroy)
-      this.player.on('metadata_arrived', this.destroy)
+      // this.player.on('loading_complete', this.destroy)
+      // this.player.on('recovered_early_eof', this.destroy)
+      // this.player.on('media_info', this.destroy)
+      // this.player.on('metadata_arrived', this.destroy)
       this.player.on('statistics_info', () => { })
     },
     start() {
@@ -83,7 +88,7 @@ export default {
 
     // latency control
     onTimeUpdate () {
-      if (!this.mediaDataSource.isLive) {
+      if (!this.mappedMediaDataSource.isLive) {
         return
       }
 
@@ -99,8 +104,6 @@ export default {
       const currentPosition = video.currentTime
       const currentEnd = video.buffered.end(video.buffered.length - 1)
       const currentBufferHealth = currentEnd - currentPosition
-
-      console.log(currentEnd, currentPosition, currentEnd - currentPosition)
 
       // update data
       const periodId = Math.floor(Date.now() / 500)
@@ -141,11 +144,12 @@ export default {
     },
   },
   data() {
-    let host = location.protocol + '//' + location.hostname;
+    let host = location.protocol + '//' + location.hostname + ':' + location.port;
 
     return {
       supported: false,
       player: null,
+
       mediaDataSource: {
         type: 'flv',
         isLive: true,
@@ -159,8 +163,8 @@ export default {
       bufferHealth: [
         // { periodId: Math.floor(second / 500), min: second }
       ],
-      bufferHealthHighWaterMark: 4,
-      bufferHealthTarget: 2,
+      bufferHealthHighWaterMark: 2,
+      bufferHealthTarget: 0.8,
       playbackRate: 1
     }
   },
@@ -174,6 +178,9 @@ export default {
           enableWorker: true
         } : {})
       }
+    },
+    poorestHealth () {
+      return Math.min(...this.bufferHealth.map(i => i.min))
     }
   },
   mounted() {

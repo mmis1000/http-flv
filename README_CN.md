@@ -10,10 +10,10 @@
 使用 Docker 拉取镜像：
 
 ```shell
-docker pull mugennsou/nginx-http-flv
+docker pull mmis1000/nginx-http-flv
 ```
 
-注: 你可以拉取 `mugennsou/nginx-http-flv:dev` tag 以使用最新版本（不稳定，但包含原作者所有修改）的 http-flv-modlue。
+注: 你可以拉取 `mmis1000/nginx-http-flv:dev` tag 以使用最新版本（不稳定，但包含原作者所有修改）的 http-flv-module。
 
 ## 使用
 
@@ -119,3 +119,22 @@ http://host[:port]/live?app=demo&stream=stream-1
 [flv.js](https://github.com/bilibili/flv.js)
 
 [docker-nginx](https://github.com/nginxinc/docker-nginx)
+
+## 測試腳本 (延遲特化)
+
+```shell
+ffmpeg \
+  -re -fflags +genpts \
+  -stream_loop -1 \
+  -i '你的檔案' \
+  -c:v libx264 -preset veryfast -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -g 50 \
+  -c:a aac -b:a 160k -ac 2 -ar 44100 \
+  -f flv \
+  -force_key_frames 'expr:gte(t,n_forced*1)' -flags +cgop \
+  -vf drawtext=fontfile=roboto.ttf:text='%{localtime}':fontsize=40:fontcolor=white@0.8:x=250:y=200 \
+  rtmp://127.0.0.1/demo/stream-1
+```
+
+## 又見
+
+原作者: mugennsou/nginx-http-flv

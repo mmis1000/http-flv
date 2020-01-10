@@ -1,6 +1,6 @@
 FROM nginx:1.16.1-alpine
 
-ENV NGINX_HTTP_FLV_MODULE_VERSION 1.2.6
+ENV NGINX_HTTP_FLV_MODULE_VERSION 1.2.7
 
 RUN CONFIG="\
     --prefix=/etc/nginx \
@@ -31,6 +31,7 @@ RUN CONFIG="\
     && rm -rf /usr/src/nginx-$NGINX_VERSION /usr/src/nginx-http-flv-module-$NGINX_HTTP_FLV_MODULE_VERSION \
     && apk del .build-deps
 
+COPY cert_key /etc/nginx/ssl/
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY conf.d/ /etc/nginx/conf.d/
 COPY www/ /var/www/

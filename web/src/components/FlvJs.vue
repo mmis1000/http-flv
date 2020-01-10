@@ -46,8 +46,11 @@ export default {
       }
     },
     load() {
+      this.bufferHealth = []
+      this.playbackRate = 1
+
       this.player && this.destroy()
-      this.player = Flv.createPlayer(this.mediaDataSource)
+      this.player = Flv.createPlayer(this.mappedMediaDataSource)
       this.player.attachMediaElement(this.$refs.video);
       this.player.load()
 
@@ -76,18 +79,100 @@ export default {
         this.player.destroy();
         this.player = null;
       }
-    }
+    },
+
+    // latency control
+    onTimeUpdate () {
+      if (!this.mediaDataSource.isLive) {
+        return
+      }
+
+      /**
+       * @type { HTMLVideoElement }
+       */
+      const video = this.$refs.video
+
+      if (!video || video.paused || !video.buffered || video.buffered.length === 0) {
+        return
+      }
+
+      const currentPosition = video.currentTime
+      const currentEnd = video.buffered.end(video.buffered.length - 1)
+      const currentBufferHealth = currentEnd - currentPosition
+
+      console.log(currentEnd, currentPosition, currentEnd - currentPosition)
+
+      // update data
+      const periodId = Math.floor(Date.now() / 500)
+
+      let record
+      if (!this.bufferHealth.length || this.bufferHealth[this.bufferHealth.length - 1].periodId !== periodId) {
+        record = {
+          periodId,
+          min: currentBufferHealth
+        }
+
+        this.bufferHealth.push(record)
+      } else {
+        record = this.bufferHealth[this.bufferHealth.length - 1]
+      }
+
+      record.min = Math.min(record.min, currentBufferHealth)
+
+      if (this.bufferHealth.length > this.bufferHealthRecordSize) {
+        this.bufferHealth.shift()
+      }
+      if (this.bufferHealth.length < this.bufferHealthRecordSize) {
+        return // we don't have enough data to judge yet
+      }
+
+      if (this.poorestHealth > this.bufferHealthHighWaterMark * 2) {
+        // do a leap, we are too far behind
+        video.currentTime = video.currentTime + (this.poorestHealth - this.bufferHealthTarget)
+      } else if (this.poorestHealth > this.bufferHealthHighWaterMark) {
+        if (this.playbackRate === 1) {
+          this.playbackRate = video.playbackRate = 1.05
+        }
+      } else if (this.poorestHealth < this.bufferHealthTarget) {
+        if (this.playbackRate > 1) {
+          this.playbackRate = video.playbackRate = 1
+        }
+      }
+    },
   },
   data() {
+    let host = location.protocol + '//' + location.hostname;
+
     return {
       supported: false,
       player: null,
       mediaDataSource: {
         type: 'flv',
         isLive: true,
-        url: 'http://localhost/live?app=demo&stream=stream-1',
+        url: host + '/live?app=demo&stream=stream-1',
         hasAudio: true,
         hasVideo: true,
+      },
+
+      // latency tracking for live video
+      bufferHealthRecordSize: 10,
+      bufferHealth: [
+        // { periodId: Math.floor(second / 500), min: second }
+      ],
+      bufferHealthHighWaterMark: 4,
+      bufferHealthTarget: 2,
+      playbackRate: 1
+    }
+  },
+  computed: {
+    mappedMediaDataSource () {
+      return {
+        ...this.mediaDataSource,
+        ...(this.mediaDataSource.isLive ? {
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          enableWorker: true
+        } : {})
       }
     }
   },

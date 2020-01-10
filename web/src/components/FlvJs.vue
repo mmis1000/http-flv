@@ -163,7 +163,7 @@ export default {
       bufferHealth: [
         // { periodId: Math.floor(second / 500), min: second }
       ],
-      bufferHealthHighWaterMark: 2,
+      bufferHealthHighWaterMark: 1.6,
       bufferHealthTarget: 0.8,
       playbackRate: 1
     }

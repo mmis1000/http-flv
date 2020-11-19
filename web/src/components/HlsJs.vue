@@ -162,7 +162,7 @@ export default {
       mediaDataSource: {
         config: { liveSyncDurationCount: 1 },
         isLive: true,
-        url: host + '/live?app=demo&stream=stream-1'
+        url: host + '/hls/stream-1.m3u8'
       },
 
       // latency tracking for live video

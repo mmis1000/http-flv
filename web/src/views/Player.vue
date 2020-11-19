@@ -15,11 +15,13 @@
 
 <script>
 import FlvJs from '@/components/FlvJs'
+import HlsJs from '@/components/HlsJs'
 
 export default {
   name: 'player',
   components: {
-    FlvJs
+    FlvJs,
+    HlsJs
   },
   computed: {
     defaultTab() {
@@ -34,7 +36,8 @@ export default {
   data() {
     return {
       tabs: {
-        FlvJs
+        FlvJs,
+        HlsJs
       },
       currentTab: null
     }

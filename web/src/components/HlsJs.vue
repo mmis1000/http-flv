@@ -143,22 +143,21 @@ export default {
       if (this.averageHealth > this.bufferHealthHighWaterMark * 2) {
         // do a leap, we are too far behind
         video.currentTime = video.currentTime + (this.poorestHealth - this.bufferHealthTarget)
+        this.bufferHealth = []
+        this.playbackRate = video.playbackRate = 1
       } else if (this.averageHealth > this.bufferHealthHighWaterMark) {
         if (this.playbackRate <= 1) {
           this.playbackRate = video.playbackRate = 1.02
-          this.countDown += this.countDownAdd
         }
       } else if (this.averageHealth < this.bufferHealthLowWaterMark) {
         if (this.playbackRate >= 1) {
           this.playbackRate = video.playbackRate = 0.98
-          this.countDown += this.countDownAdd
         }
       } else if (
         this.averageHealth < this.bufferHealthHighZone && this.playbackRate > 1 ||
         this.averageHealth > this.bufferHealthLowZone && this.playbackRate < 1
       ){
         this.playbackRate = video.playbackRate = 1
-        this.countDown += this.countDownAdd
       }
     },
   },

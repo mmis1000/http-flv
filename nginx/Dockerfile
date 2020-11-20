@@ -1,4 +1,4 @@
-FROM nginx:1.16.1-alpine
+FROM nginx:1.19.4-alpine
 
 ENV NGINX_HTTP_FLV_MODULE_VERSION 1.2.8
 ENV NGINX_ECHO_MODULE_VERSION 0.62 
@@ -36,12 +36,13 @@ RUN CONFIG="\
     && cp objs/ngx_http_flv_live_module.so objs/ngx_http_echo_module.so /usr/lib/nginx/modules \
     && strip /usr/lib/nginx/modules/ngx_http_flv_live_module.so \
     && strip /usr/lib/nginx/modules/ngx_http_echo_module.so \
-    && rm -rf /usr/src/nginx-$NGINX_VERSION /usr/src/nginx-http-flv-module-$NGINX_HTTP_FLV_MODULE_VERSION /usr/src/echo-nginx-module-$NGINX_ECHO_MODULE_VERSION \
+    # && rm -rf /usr/src/nginx-$NGINX_VERSION /usr/src/nginx-http-flv-module-$NGINX_HTTP_FLV_MODULE_VERSION /usr/src/echo-nginx-module-$NGINX_ECHO_MODULE_VERSION \
     && apk del .build-deps
 
-COPY cert_key /etc/nginx/ssl/
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY conf.d/ /etc/nginx/conf.d/
-COPY www/ /var/www/
+COPY cert_key     /etc/nginx/ssl/
+COPY nginx.conf   /etc/nginx/nginx.conf
+COPY js/hls.js    /etc/nginx/hls.js
+COPY conf.d/      /etc/nginx/conf.d/
+COPY www/         /var/www/
 
 EXPOSE 80 1935

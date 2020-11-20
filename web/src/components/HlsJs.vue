@@ -14,7 +14,10 @@
         <el-button size="mini" type="danger" @click="destroy">DESTROY</el-button>
       </el-form-item>
       <el-form-item>
-        Current buffer length: {{poorestHealth.toFixed(3)}}s
+        Poorest buffer length: {{ poorestHealth.toFixed(3) }}s <br>
+        Average buffer length: {{ averageHealth.toFixed(3) }}s <br>
+        Best buffer length: {{ bestHealth.toFixed(3) }}s <br>
+        Playback Rate: {{ playbackRate }}
       </el-form-item>
     </el-form>
     <video v-bind="mappedMediaDataSource.isLive ? {} : { controls: '' }" @timeupdate="onTimeUpdate" ref="video">
@@ -137,17 +140,25 @@ export default {
         return // we don't have enough data to judge yet
       }
 
-      if (this.poorestHealth > this.bufferHealthHighWaterMark * 2) {
+      if (this.averageHealth > this.bufferHealthHighWaterMark * 2) {
         // do a leap, we are too far behind
         video.currentTime = video.currentTime + (this.poorestHealth - this.bufferHealthTarget)
-      } else if (this.poorestHealth > this.bufferHealthHighWaterMark) {
-        if (this.playbackRate === 1) {
-          this.playbackRate = video.playbackRate = 1.05
+      } else if (this.averageHealth > this.bufferHealthHighWaterMark) {
+        if (this.playbackRate <= 1) {
+          this.playbackRate = video.playbackRate = 1.02
+          this.countDown += this.countDownAdd
         }
-      } else if (this.poorestHealth < this.bufferHealthTarget) {
-        if (this.playbackRate > 1) {
-          this.playbackRate = video.playbackRate = 1
+      } else if (this.averageHealth < this.bufferHealthLowWaterMark) {
+        if (this.playbackRate >= 1) {
+          this.playbackRate = video.playbackRate = 0.98
+          this.countDown += this.countDownAdd
         }
+      } else if (
+        this.averageHealth < this.bufferHealthHighZone && this.playbackRate > 1 ||
+        this.averageHealth > this.bufferHealthLowZone && this.playbackRate < 1
+      ){
+        this.playbackRate = video.playbackRate = 1
+        this.countDown += this.countDownAdd
       }
     },
   },
@@ -170,8 +181,11 @@ export default {
       bufferHealth: [
         // { periodId: Math.floor(second / 500), min: second }
       ],
-      bufferHealthHighWaterMark: 1.5,
-      bufferHealthTarget: 0.7,
+      bufferHealthLowWaterMark: 1.3,
+      bufferHealthLowZone: 1.5,
+      bufferHealthTarget: 1.6,
+      bufferHealthHighZone: 1.8,
+      bufferHealthHighWaterMark: 2,
       playbackRate: 1
     }
   },
@@ -183,6 +197,17 @@ export default {
     },
     poorestHealth () {
       return Math.min(...this.bufferHealth.map(i => i.min))
+    },
+    averageHealth () {
+      const healths = this.bufferHealth.map(i => i.min)
+      healths.sort((a, b) => a - b)
+      healths.pop()
+      healths.shift()
+
+      return healths.reduce(((p, v) => p + v), 0) / Math.max(healths.length, 1)
+    },
+    bestHealth () {
+      return Math.max(...this.bufferHealth.map(i => i.min))
     }
   },
   mounted() {

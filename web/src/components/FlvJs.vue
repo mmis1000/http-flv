@@ -21,14 +21,20 @@
     </el-form>
     <video v-bind="mappedMediaDataSource.isLive ? {} : { controls: '' }" @timeupdate="onTimeUpdate" ref="video">
     </video>
+    <stat ref="stat" />
   </div>
 </template>
 
 <script>
 import Flv from 'flv.js'
 
+import Stat from './Stat'
+
 export default {
   name: 'flv-js',
+  components: {
+    Stat
+  },
   watch: {
     'mediaDataSource.url': (value) => {
       try {
@@ -104,6 +110,8 @@ export default {
       const currentPosition = video.currentTime
       const currentEnd = video.buffered.end(video.buffered.length - 1)
       const currentBufferHealth = currentEnd - currentPosition
+
+      this.$refs.stat.updateCanvas(currentBufferHealth, this.poorestHealth)
 
       // update data
       const periodId = Math.floor(Date.now() / 500)

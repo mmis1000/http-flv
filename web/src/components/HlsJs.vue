@@ -22,6 +22,7 @@
     </el-form>
     <video v-bind="mappedMediaDataSource.isLive ? {} : { controls: '' }" @timeupdate="onTimeUpdate" ref="video">
     </video>
+    <stat ref="stat" />
   </div>
 </template>
 
@@ -29,12 +30,17 @@
 /* eslint-disable no-console */
 import Hls from 'hls.js'
 
+import Stat from './Stat'
+
 // const PLAY_TIMEOUT = 10 * 1000
 
 // const isSafari = /^((?!chrome|android).)*safari|^((?!chrome|android).)*(iPhone|iPad);/i.test(navigator.userAgent)
 
 export default {
   name: 'hls-js',
+  components: {
+    Stat
+  },
   watch: {
     'mediaDataSource.url': (value) => {
       try {
@@ -116,6 +122,8 @@ export default {
       const currentEnd = video.buffered.end(video.buffered.length - 1)
       const currentBufferHealth = currentEnd - currentPosition
 
+      this.$refs.stat.updateCanvas(currentBufferHealth, this.averageHealth)
+
       // update data
       const periodId = Math.floor(Date.now() / 500)
 
@@ -123,7 +131,8 @@ export default {
       if (!this.bufferHealth.length || this.bufferHealth[this.bufferHealth.length - 1].periodId !== periodId) {
         record = {
           periodId,
-          min: currentBufferHealth
+          min: currentBufferHealth,
+          max: currentBufferHealth
         }
 
         this.bufferHealth.push(record)
@@ -132,6 +141,7 @@ export default {
       }
 
       record.min = Math.min(record.min, currentBufferHealth)
+      record.max = Math.max(record.max, currentBufferHealth)
 
       if (this.bufferHealth.length > this.bufferHealthRecordSize) {
         this.bufferHealth.shift()
@@ -159,7 +169,7 @@ export default {
       ){
         this.playbackRate = video.playbackRate = 1
       }
-    },
+    }
   },
   data() {
     let host = location.protocol + '//' + location.hostname + ':' + location.port;
@@ -180,11 +190,11 @@ export default {
       bufferHealth: [
         // { periodId: Math.floor(second / 500), min: second }
       ],
-      bufferHealthLowWaterMark: 1.3,
-      bufferHealthLowZone: 1.5,
-      bufferHealthTarget: 1.6,
-      bufferHealthHighZone: 1.8,
-      bufferHealthHighWaterMark: 2,
+      bufferHealthLowWaterMark: 1.2,
+      bufferHealthLowZone: 1.4,
+      bufferHealthTarget: 1.7,
+      bufferHealthHighZone: 1.9,
+      bufferHealthHighWaterMark: 2.1,
       playbackRate: 1
     }
   },
@@ -198,7 +208,7 @@ export default {
       return Math.min(...this.bufferHealth.map(i => i.min))
     },
     averageHealth () {
-      const healths = this.bufferHealth.map(i => i.min)
+      const healths = this.bufferHealth.map(i => (i.min + i.max) / 2)
       healths.sort((a, b) => a - b)
       healths.pop()
       healths.shift()
@@ -206,7 +216,7 @@ export default {
       return healths.reduce(((p, v) => p + v), 0) / Math.max(healths.length, 1)
     },
     bestHealth () {
-      return Math.max(...this.bufferHealth.map(i => i.min))
+      return Math.max(...this.bufferHealth.map(i => i.max))
     }
   },
   mounted() {
